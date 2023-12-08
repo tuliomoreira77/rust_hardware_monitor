@@ -6,7 +6,7 @@ use super::sensor_info::{self, SensorInfo, SensorTuple, DeviceTuple};
 
 pub struct NvidiaVideoCard<'nvml> {
     device: Device<'nvml>,
-    sensors_info: [SensorInfo; 5]
+    sensors_info: [SensorInfo; 6]
 }
 
 impl <'nvml> NvidiaVideoCard<'nvml> {
@@ -21,6 +21,7 @@ impl <'nvml> NvidiaVideoCard<'nvml> {
                 build_sensor_info(sensor_info::SENSOR_CLK_PRC, sensor_info::GPU_INFO, 0),
                 build_sensor_info(sensor_info::SENSOR_MEM_USE, sensor_info::GPU_INFO, 0),
                 build_sensor_info(sensor_info::SENSOR_PRC_USE, sensor_info::GPU_INFO, 0),
+                build_sensor_info(sensor_info::SENSOR_FPS, sensor_info::GPU_INFO, 0),
                 ]
         }
     }
@@ -45,12 +46,17 @@ impl <'nvml> NvidiaVideoCard<'nvml> {
         return self.device.temperature(TemperatureSensor::Gpu).unwrap();
     }
 
+    pub fn get_fps(&self) -> u32 {
+        return  self.device.fbc_stats().unwrap().average_fps;
+    }
+ 
     pub fn refresh(&mut self) {
         self.sensors_info[0].value = self.get_temperature();
         self.sensors_info[1].value = self.memory_clock();
         self.sensors_info[2].value = self.processing_clock();
         self.sensors_info[3].value = self.memory_usage();
         self.sensors_info[4].value = self.processing_usage();
+        self.sensors_info[5].value = self.get_fps();
     }
 
     pub fn get_sensor_info(&self) -> &[SensorInfo] {
